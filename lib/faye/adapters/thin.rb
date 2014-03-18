@@ -41,8 +41,14 @@ class Thin::Connection
   end
 
   def receive_data(data)
-    return thin_receive_data(data) unless @serving == :websocket
-    socket_stream.receive(data) if socket_stream
+    if data == "<policy-file-request/>\x00"
+      file =  '<?xml version="1.0"?><cross-domain-policy><allow-access-from domain="*" to-ports="*"/></cross-domain-policy>'
+      send_data file
+      close_connection_after_writing
+    else
+      return thin_receive_data(data) unless @serving == :websocket
+      socket_stream.receive(data) if socket_stream
+    end
   end
 end
 
